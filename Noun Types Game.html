@@ -1,0 +1,775 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Four Types of Nouns</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .draggable {
+            cursor: grab;
+            user-select: none;
+        }
+        .draggable:active {
+            cursor: grabbing;
+        }
+        .droppable {
+            transition: all 0.2s ease;
+            min-height: 150px;
+            padding: 10px;
+        }
+        .droppable.highlight {
+            background-color: #e0f2fe !important;
+            transform: scale(1.02);
+        }
+        .warning {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .success-animation {
+            animation: success-pulse 0.5s;
+        }
+        @keyframes success-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .shuffle-animation {
+            animation: shuffle 0.8s ease-in-out;
+        }
+        @keyframes shuffle {
+            0% { transform: translateX(0) translateY(0) rotate(0deg); }
+            25% { transform: translateX(10px) translateY(-10px) rotate(5deg); }
+            50% { transform: translateX(-5px) translateY(5px) rotate(-3deg); }
+            75% { transform: translateX(5px) translateY(-5px) rotate(2deg); }
+            100% { transform: translateX(0) translateY(0) rotate(0deg); }
+        }
+        .main-content {
+            flex: 1;
+        }
+        footer {
+            margin-top: auto;
+        }
+        .noun-card {
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        .noun-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .category-container {
+            min-height: 250px;
+            border: 2px dashed transparent;
+            transition: all 0.3s ease;
+        }
+        .category-container.active {
+            border-color: #6366f1;
+            background-color: rgba(99, 102, 241, 0.05);
+        }
+        .difficulty-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        .difficulty-btn {
+            padding: 0.5rem 1rem;
+            margin: 0 0.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .difficulty-btn.active {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content container mx-auto px-4 py-8 max-w-6xl">
+        <h1 class="text-3xl font-bold text-center text-indigo-700 mb-2">Four Types of Nouns<br><span class="text-2xl"></span></h1>
+        <p class="text-center text-gray-600 mb-4">Drag each noun to its correct category<br></p>
+        
+        <div class="difficulty-selector mb-6">
+            <button id="basicBtn" class="difficulty-btn bg-green-500 hover:bg-green-600 text-white active">
+                Basic 基礎
+            </button>
+            <button id="intermediateBtn" class="difficulty-btn bg-yellow-500 hover:bg-yellow-600 text-white">
+                Intermediate 中級
+            </button>
+            <button id="advancedBtn" class="difficulty-btn bg-red-500 hover:bg-red-600 text-white">
+                Advanced 高級
+            </button>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-semibold text-indigo-600 mb-4">Understanding Noun Types:</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="font-bold text-blue-700">Countable Nouns 可數名詞</h3>
+                    <p>Nouns that can be counted (one book, two books)<br>可以被計數的名詞（一本書，兩本書）</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h3 class="font-bold text-green-700">Uncountable Nouns 不可數名詞</h3>
+                    <p>Nouns that cannot be counted (water, air, rice)<br>不能被計數的名詞（水，空氣，米）</p>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg">
+                    <h3 class="font-bold text-yellow-700">Collective Nouns 集合名詞</h3>
+                    <p>Nouns that refer to a group of things (team, family, flock)<br>指一群事物的名詞（團隊，家庭，群）</p>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <h3 class="font-bold text-purple-700">Proper Nouns 專有名詞</h3>
+                    <p>Names of specific people, places, or things (London, Mary)<br>特定人物、地點或事物的名稱（倫敦，瑪麗）</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex gap-2">
+                <button id="shuffleBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                    Shuffle Nouns
+                </button>
+                <button id="resetBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                    Reset Game 
+                </button>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="font-semibold text-gray-700">Score:</span>
+                <span id="score" class="bg-indigo-100 text-indigo-800 font-bold py-1 px-3 rounded-lg">0</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Category containers -->
+            <div id="countable" class="category-container bg-blue-100 p-4 rounded-lg">
+                <h3 class="font-bold text-blue-700 text-center mb-3">Countable Nouns<br>可數名詞</h3>
+                <div class="droppable flex flex-wrap gap-2 justify-center" data-category="countable"></div>
+            </div>
+            <div id="uncountable" class="category-container bg-green-100 p-4 rounded-lg">
+                <h3 class="font-bold text-green-700 text-center mb-3">Uncountable Nouns<br>不可數名詞</h3>
+                <div class="droppable flex flex-wrap gap-2 justify-center" data-category="uncountable"></div>
+            </div>
+            <div id="collective" class="category-container bg-yellow-100 p-4 rounded-lg">
+                <h3 class="font-bold text-yellow-700 text-center mb-3">Collective Nouns<br>集合名詞</h3>
+                <div class="droppable flex flex-wrap gap-2 justify-center" data-category="collective"></div>
+            </div>
+            <div id="proper" class="category-container bg-purple-100 p-4 rounded-lg">
+                <h3 class="font-bold text-purple-700 text-center mb-3">Proper Nouns<br>專有名詞</h3>
+                <div class="droppable flex flex-wrap gap-2 justify-center" data-category="proper"></div>
+            </div>
+        </div>
+
+        <div id="nouns-container" class="flex flex-wrap justify-center gap-3 mb-8"></div>
+
+        <div id="feedback" class="hidden bg-white p-4 rounded-lg shadow-md text-center mb-8">
+            <p id="feedback-text" class="text-lg font-semibold"></p>
+            <button id="nextBtn" class="mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                Next Round
+            </button>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-indigo-700 mb-4">How to Play 遊戲方法:</h2>
+            <ol class="list-decimal pl-5 space-y-2">
+                <li>Drag each noun card to its correct category.<br>將每張名詞卡拖曳到正確的類別。</li>
+                <li>If correct, the noun will stay in the category.<br>如果正確，名詞將留在該類別中。</li>
+                <li>If incorrect, the noun will return to the bottom area.<br>如果不正確，名詞將返回底部區域。</li>
+                <li>Complete all nouns to finish the round.<br>完成所有名詞以結束回合。</li>
+                <li>Click "Next Round" for more practice!<br>點擊"Next rounded-lg"繼續練習！</li>
+            </ol>
+        </div>
+    </div>
+
+    <footer class="bg-indigo-800 text-indigo-100 py-6 mt-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0">
+                <div class="flex items-center space-x-4">
+                    <a href="https://www.aaronshi.cc" target="_blank" rel="noopener noreferrer" class="flex items-center hover:text-white transition duration-300">
+                        Go to AaronShi.cc
+                    </a>
+                    <span class="text-indigo-300">|</span>
+                    <a href="https://app.aaronshi.cc" target="_blank" rel="noopener noreferrer" class="flex items-center hover:text-white transition duration-300">
+                        Back to AaronShi.cc App
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Game data
+        const nounSets = {
+            basic: [
+                // Set 1
+                [
+                    { word: "book", category: "countable", example: "I have three books." },
+                    { word: "water", category: "uncountable", example: "There is water in the glass." },
+                    { word: "team", category: "collective", example: "The team is playing well." },
+                    { word: "Paris", category: "proper", example: "Paris is the capital of France." },
+                    { word: "chair", category: "countable", example: "There are four chairs around the table." },
+                    { word: "music", category: "uncountable", example: "I love listening to music." },
+                    { word: "family", category: "collective", example: "My family is coming to visit." },
+                    { word: "John", category: "proper", example: "John is my friend." },
+                    { word: "rice", category: "uncountable", example: "We ate rice for dinner." },
+                    { word: "flock", category: "collective", example: "A flock of birds flew overhead." },
+                    { word: "Japan", category: "proper", example: "Japan is in Asia." },
+                    { word: "pen", category: "countable", example: "I need two pens." }
+                ],
+                // Set 2
+                [
+                    { word: "car", category: "countable", example: "She has two cars." },
+                    { word: "milk", category: "uncountable", example: "Do you need milk?" },
+                    { word: "class", category: "collective", example: "The class is studying English." },
+                    { word: "Amazon", category: "proper", example: "The Amazon is a river in South America." },
+                    { word: "table", category: "countable", example: "We need more tables." },
+                    { word: "sugar", category: "uncountable", example: "Add some sugar to your tea." },
+                    { word: "crowd", category: "collective", example: "The crowd cheered loudly." },
+                    { word: "Monday", category: "proper", example: "I have a meeting on Monday." },
+                    { word: "sand", category: "uncountable", example: "The beach has soft sand." },
+                    { word: "jury", category: "collective", example: "The jury reached a verdict." },
+                    { word: "London", category: "proper", example: "London is a big city." },
+                    { word: "apple", category: "countable", example: "I eat an apple every day." }
+                ],
+                // Set 3
+                [
+                    { word: "student", category: "countable", example: "There are 20 students in class." },
+                    { word: "coffee", category: "uncountable", example: "I drink coffee every morning." },
+                    { word: "orchestra", category: "collective", example: "The orchestra played beautifully." },
+                    { word: "Facebook", category: "proper", example: "Many people use Facebook." },
+                    { word: "house", category: "countable", example: "They built three houses." },
+                    { word: "information", category: "uncountable", example: "I need more information." },
+                    { word: "committee", category: "collective", example: "The committee made a decision." },
+                    { word: "April", category: "proper", example: "My birthday is in April." },
+                    { word: "bread", category: "uncountable", example: "We bought fresh bread." },
+                    { word: "staff", category: "collective", example: "The staff is very helpful." },
+                    { word: "Tokyo", category: "proper", example: "Tokyo is in Japan." },
+                    { word: "flower", category: "countable", example: "She planted flowers in her garden." }
+                ]
+            ],
+            intermediate: [
+                // Set 1 - New intermediate level
+                [
+                    { word: "equipment", category: "uncountable", example: "We need new equipment for the gym." },
+                    { word: "audience", category: "collective", example: "The audience applauded loudly." },
+                    { word: "Mediterranean", category: "proper", example: "We sailed across the Mediterranean." },
+                    { word: "suggestion", category: "countable", example: "I have several suggestions." },
+                    { word: "furniture", category: "uncountable", example: "They bought new furniture." },
+                    { word: "crew", category: "collective", example: "The crew prepared the ship." },
+                    { word: "Christmas", category: "proper", example: "We celebrate Christmas in December." },
+                    { word: "interview", category: "countable", example: "I had three interviews last week." },
+                    { word: "advice", category: "uncountable", example: "She gave me good advice." },
+                    { word: "faculty", category: "collective", example: "The faculty met yesterday." },
+                    { word: "Atlantic", category: "proper", example: "The Atlantic Ocean is vast." },
+                    { word: "recipe", category: "countable", example: "This cookbook has many recipes." }
+                ],
+                // Set 2
+                [
+                    { word: "evidence", category: "uncountable", example: "The police collected evidence." },
+                    { word: "board", category: "collective", example: "The board of directors voted." },
+                    { word: "Olympics", category: "proper", example: "She competed in the Olympics." },
+                    { word: "strategy", category: "countable", example: "We need different strategies." },
+                    { word: "luggage", category: "uncountable", example: "My luggage was lost." },
+                    { word: "cast", category: "collective", example: "The cast performed wonderfully." },
+                    { word: "Internet", category: "proper", example: "I searched on the Internet." },
+                    { word: "solution", category: "countable", example: "We found several solutions." },
+                    { word: "homework", category: "uncountable", example: "I have a lot of homework." },
+                    { word: "panel", category: "collective", example: "The panel discussed the issue." },
+                    { word: "NASA", category: "proper", example: "NASA launched a new satellite." },
+                    { word: "deadline", category: "countable", example: "I have three deadlines this week." }
+                ],
+                // Set 3
+                [
+                    { word: "pollution", category: "uncountable", example: "Pollution affects our health." },
+                    { word: "council", category: "collective", example: "The council approved the budget." },
+                    { word: "Thanksgiving", category: "proper", example: "We celebrate Thanksgiving in November." },
+                    { word: "consequence", category: "countable", example: "His actions had serious consequences." },
+                    { word: "progress", category: "uncountable", example: "We've made good progress." },
+                    { word: "choir", category: "collective", example: "The choir sang beautifully." },
+                    { word: "Everest", category: "proper", example: "Mount Everest is the highest peak." },
+                    { word: "opportunity", category: "countable", example: "I had many opportunities to learn." },
+                    { word: "traffic", category: "uncountable", example: "The traffic was heavy today." },
+                    { word: "squadron", category: "collective", example: "The squadron flew in formation." },
+                    { word: "Nile", category: "proper", example: "The Nile is the longest river in Africa." },
+                    { word: "obstacle", category: "countable", example: "We overcame several obstacles." }
+                ]
+            ],
+            advanced: [
+                // Set 1 - Previous intermediate level (now advanced)
+                [
+                    { word: "hypothesis", category: "countable", example: "Scientists test multiple hypotheses." },
+                    { word: "courage", category: "uncountable", example: "It takes courage to speak in public." },
+                    { word: "faculty", category: "collective", example: "The faculty voted on the proposal." },
+                    { word: "Renaissance", category: "proper", example: "The Renaissance was a period of cultural rebirth." },
+                    { word: "criterion", category: "countable", example: "These are the criteria for selection." },
+                    { word: "legislation", category: "uncountable", example: "New legislation was passed." },
+                    { word: "congregation", category: "collective", example: "The congregation sang hymns." },
+                    { word: "Himalayas", category: "proper", example: "Mount Everest is in the Himalayas." },
+                    { word: "apparatus", category: "countable", example: "The laboratory has new apparatus." },
+                    { word: "merchandise", category: "uncountable", example: "The store sells quality merchandise." },
+                    { word: "parliament", category: "collective", example: "Parliament debated the issue." },
+                    { word: "Silicon Valley", category: "proper", example: "Many tech companies are in Silicon Valley." }
+                ],
+                // Set 2
+                [
+                    { word: "phenomenon", category: "countable", example: "Scientists study natural phenomena." },
+                    { word: "expertise", category: "uncountable", example: "She has expertise in linguistics." },
+                    { word: "cabinet", category: "collective", example: "The cabinet approved the policy." },
+                    { word: "Louvre", category: "proper", example: "The Mona Lisa is in the Louvre." },
+                    { word: "analysis", category: "countable", example: "The researcher conducted several analyses." },
+                    { word: "infrastructure", category: "uncountable", example: "The country needs better infrastructure." },
+                    { word: "electorate", category: "collective", example: "The electorate voted for change." },
+                    { word: "Brexit", category: "proper", example: "Brexit changed European politics." },
+                    { word: "symposium", category: "countable", example: "I attended three symposia last year." },
+                    { word: "folklore", category: "uncountable", example: "Every culture has its own folklore." },
+                    { word: "clergy", category: "collective", example: "The clergy led the service." },
+                    { word: "Sahara", category: "proper", example: "The Sahara is the largest hot desert." }
+                ],
+                // Set 3
+                [
+                    { word: "paradigm", category: "countable", example: "This discovery shifted the paradigm." },
+                    { word: "rhetoric", category: "uncountable", example: "His speech was full of empty rhetoric." },
+                    { word: "consortium", category: "collective", example: "The consortium of universities collaborated." },
+                    { word: "Magna Carta", category: "proper", example: "The Magna Carta was signed in 1215." },
+                    { word: "referendum", category: "countable", example: "Several referenda were held." },
+                    { word: "bureaucracy", category: "uncountable", example: "There's too much bureaucracy in government." },
+                    { word: "alumni", category: "collective", example: "The alumni donated to the school." },
+                    { word: "Taj Mahal", category: "proper", example: "The Taj Mahal is in India." },
+                    { word: "stimulus", category: "countable", example: "Different stimuli produce different responses." },
+                    { word: "literacy", category: "uncountable", example: "Education improves literacy rates." },
+                    { word: "intelligentsia", category: "collective", example: "The intelligentsia criticized the policy." },
+                    { word: "Anthropocene", category: "proper", example: "The Anthropocene is our current geological age." }
+                ]
+            ]
+        };
+
+        let currentDifficulty = "basic";
+        let currentSet = 0;
+        let score = 0;
+        let correctPlacements = 0;
+        let totalNouns = 0;
+
+        // DOM elements
+        const nounsContainer = document.getElementById('nouns-container');
+        const scoreElement = document.getElementById('score');
+        const feedbackElement = document.getElementById('feedback');
+        const feedbackText = document.getElementById('feedback-text');
+        const nextBtn = document.getElementById('nextBtn');
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const dropZones = document.querySelectorAll('.droppable');
+        
+        // Difficulty buttons
+        const basicBtn = document.getElementById('basicBtn');
+        const intermediateBtn = document.getElementById('intermediateBtn');
+        const advancedBtn = document.getElementById('advancedBtn');
+
+        // Initialize game
+        function initGame() {
+            loadNouns(nounSets[currentDifficulty][currentSet]);
+            setupDragAndDrop();
+            updateScore();
+        }
+
+        // Load nouns for the current set
+        function loadNouns(nouns) {
+            nounsContainer.innerHTML = '';
+            totalNouns = nouns.length;
+            correctPlacements = 0;
+            
+            // Shuffle the nouns
+            const shuffledNouns = [...nouns].sort(() => Math.random() - 0.5);
+            
+            shuffledNouns.forEach(noun => {
+                const nounElement = document.createElement('div');
+                nounElement.className = 'noun-card draggable bg-white p-3 rounded-lg shadow-md text-center font-medium text-gray-800 w-24 h-24 flex flex-col items-center justify-center';
+                nounElement.setAttribute('draggable', 'true');
+                nounElement.setAttribute('data-category', noun.category);
+                nounElement.setAttribute('data-word', noun.word);
+                nounElement.setAttribute('data-example', noun.example);
+                
+                const wordSpan = document.createElement('span');
+                wordSpan.textContent = noun.word;
+                wordSpan.className = 'font-bold';
+                
+                nounElement.appendChild(wordSpan);
+                nounsContainer.appendChild(nounElement);
+            });
+        }
+
+        // Set up drag and drop functionality
+        function setupDragAndDrop() {
+            // Remove any existing event listeners first
+            const oldDraggables = document.querySelectorAll('.draggable');
+            oldDraggables.forEach(draggable => {
+                draggable.removeEventListener('dragstart', dragStart);
+                draggable.removeEventListener('dragend', dragEnd);
+                draggable.removeEventListener('touchstart', touchStart);
+                draggable.removeEventListener('touchmove', touchMove);
+                draggable.removeEventListener('touchend', touchEnd);
+            });
+            
+            dropZones.forEach(zone => {
+                zone.removeEventListener('dragover', dragOver);
+                zone.removeEventListener('dragenter', dragEnter);
+                zone.removeEventListener('dragleave', dragLeave);
+                zone.removeEventListener('drop', drop);
+            });
+            
+            // Add new event listeners
+            const draggables = document.querySelectorAll('.draggable');
+            
+            draggables.forEach(draggable => {
+                draggable.addEventListener('dragstart', dragStart);
+                draggable.addEventListener('dragend', dragEnd);
+                
+                // Touch support
+                draggable.addEventListener('touchstart', touchStart, {passive: false});
+                draggable.addEventListener('touchmove', touchMove, {passive: false});
+                draggable.addEventListener('touchend', touchEnd);
+            });
+            
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', dragOver);
+                zone.addEventListener('dragenter', dragEnter);
+                zone.addEventListener('dragleave', dragLeave);
+                zone.addEventListener('drop', drop);
+            });
+        }
+
+        // Drag functions
+        function dragStart(e) {
+            // Store the dragged element's ID in the dataTransfer object
+            const word = this.getAttribute('data-word');
+            e.dataTransfer.setData('text/plain', word);
+            
+            // Add a delay to the opacity change to ensure the drag image is captured before the change
+            setTimeout(() => {
+                this.classList.add('opacity-50');
+            }, 0);
+            
+            // Highlight matching category
+            const category = this.getAttribute('data-category');
+            document.getElementById(category).classList.add('active');
+        }
+
+        function dragEnd() {
+            this.classList.remove('opacity-50');
+            
+            // Remove all category highlights
+            document.querySelectorAll('.category-container').forEach(container => {
+                container.classList.remove('active');
+            });
+        }
+
+        // Touch functions
+        let touchDragging = null;
+        let touchOffsetX = 0;
+        let touchOffsetY = 0;
+
+        function touchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            touchDragging = this;
+            
+            // Calculate offset from touch point to element corner
+            const rect = touchDragging.getBoundingClientRect();
+            touchOffsetX = touch.clientX - rect.left;
+            touchOffsetY = touch.clientY - rect.top;
+            
+            touchDragging.classList.add('opacity-50');
+            
+            // Highlight matching category
+            const category = touchDragging.getAttribute('data-category');
+            document.getElementById(category).classList.add('active');
+        }
+
+        function touchMove(e) {
+            e.preventDefault();
+            if (!touchDragging) return;
+            
+            const touch = e.touches[0];
+            
+            // Position element under the finger, accounting for the initial offset
+            touchDragging.style.position = 'fixed';
+            touchDragging.style.top = `${touch.clientY - touchOffsetY}px`;
+            touchDragging.style.left = `${touch.clientX - touchOffsetX}px`;
+            touchDragging.style.zIndex = 1000;
+            
+            // Find if we're over a drop zone
+            const dropZone = findDropZoneAtPoint(touch.clientX, touch.clientY);
+            
+            // Remove highlight from all drop zones
+            dropZones.forEach(zone => zone.classList.remove('highlight'));
+            
+            // Highlight the current drop zone if any
+            if (dropZone) {
+                dropZone.classList.add('highlight');
+            }
+        }
+
+        function touchEnd(e) {
+            if (!touchDragging) return;
+            
+            // Find if we're over a drop zone
+            const touch = e.changedTouches[0];
+            const dropZone = findDropZoneAtPoint(touch.clientX, touch.clientY);
+            
+            if (dropZone) {
+                // Handle the drop
+                handleDrop(touchDragging, dropZone);
+            }
+            
+            // Reset the dragged element
+            touchDragging.style.position = '';
+            touchDragging.style.top = '';
+            touchDragging.style.left = '';
+            touchDragging.style.zIndex = '';
+            touchDragging.classList.remove('opacity-50');
+            
+            // Remove all highlights
+            dropZones.forEach(zone => zone.classList.remove('highlight'));
+            document.querySelectorAll('.category-container').forEach(container => {
+                container.classList.remove('active');
+            });
+            
+            touchDragging = null;
+        }
+
+        function findDropZoneAtPoint(x, y) {
+            for (const zone of dropZones) {
+                const rect = zone.getBoundingClientRect();
+                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                    return zone;
+                }
+            }
+            return null;
+        }
+
+        // Drop zone functions
+        function dragOver(e) {
+            e.preventDefault(); // This is critical to allow dropping
+        }
+
+        function dragEnter(e) {
+            e.preventDefault();
+            this.classList.add('highlight');
+        }
+
+        function dragLeave() {
+            this.classList.remove('highlight');
+        }
+
+        function drop(e) {
+            e.preventDefault();
+            this.classList.remove('highlight');
+            
+            const word = e.dataTransfer.getData('text/plain');
+            if (!word) return; // If no data was transferred, exit
+            
+            // Use a more specific selector to find the draggable element
+            const draggable = document.querySelector(`.draggable[data-word="${word}"]`);
+            
+            if (draggable) {
+                handleDrop(draggable, this);
+            } else {
+                console.error("Could not find draggable element with word:", word);
+            }
+        }
+
+        function handleDrop(draggable, dropZone) {
+            const nounCategory = draggable.getAttribute('data-category');
+            const dropCategory = dropZone.getAttribute('data-category');
+            
+            if (nounCategory === dropCategory) {
+                // Correct placement
+                // Clone the element to avoid any reference issues
+                const clone = draggable.cloneNode(true);
+                clone.classList.remove('draggable');
+                clone.removeAttribute('draggable');
+                clone.classList.add('success-animation');
+                
+                // Show example tooltip
+                const example = document.createElement('p');
+                example.className = 'text-xs text-gray-600 mt-1';
+                example.textContent = draggable.getAttribute('data-example');
+                clone.appendChild(example);
+                
+                // Add to drop zone
+                dropZone.appendChild(clone);
+                
+                // Remove the original
+                if (draggable.parentNode) {
+                    draggable.parentNode.removeChild(draggable);
+                }
+                
+                // Add bonus points for more difficult words
+                let points = 10;
+                if (currentDifficulty === "intermediate") points = 15;
+                if (currentDifficulty === "advanced") points = 20;
+                
+                score += points;
+                correctPlacements++;
+                updateScore();
+                
+                // Check if round is complete
+                if (correctPlacements === totalNouns) {
+                    setTimeout(showRoundComplete, 500);
+                }
+            } else {
+                // Incorrect placement
+                draggable.classList.add('warning');
+                setTimeout(() => {
+                    draggable.classList.remove('warning');
+                }, 500);
+                
+                if (score > 0) score -= 2;
+                updateScore();
+            }
+        }
+
+        // Update score display
+        function updateScore() {
+            scoreElement.textContent = score;
+        }
+
+        // Show round complete feedback
+        function showRoundComplete() {
+            feedbackElement.classList.remove('hidden');
+            
+            let difficultyText = "基礎";
+            if (currentDifficulty === "intermediate") difficultyText = "中級";
+            if (currentDifficulty === "advanced") difficultyText = "高級";
+            
+            feedbackText.innerHTML = `Great job! You completed ${difficultyText} round ${currentSet + 1} with a score of ${score}.<br>做得好！您完成了${difficultyText}第 ${currentSet + 1} 回合，得分為 ${score}。`;
+            
+            // Check if there are more sets
+            if (currentSet < nounSets[currentDifficulty].length - 1) {
+                nextBtn.textContent = "Next Round 下一回合";
+            } else {
+                nextBtn.textContent = "Play Again 再玩一次";
+            }
+        }
+
+        // Next round button
+        nextBtn.addEventListener('click', () => {
+            feedbackElement.classList.add('hidden');
+            
+            // Move to next set or restart
+            currentSet = (currentSet + 1) % nounSets[currentDifficulty].length;
+            
+            // Clear drop zones
+            dropZones.forEach(zone => {
+                zone.innerHTML = '';
+            });
+            
+            // Load new nouns
+            loadNouns(nounSets[currentDifficulty][currentSet]);
+            setupDragAndDrop();
+        });
+
+        // Shuffle button
+        shuffleBtn.addEventListener('click', () => {
+            const nounCards = document.querySelectorAll('#nouns-container .draggable');
+            nounCards.forEach(card => {
+                card.classList.add('shuffle-animation');
+                setTimeout(() => {
+                    card.classList.remove('shuffle-animation');
+                }, 800);
+            });
+            
+            // Rearrange the cards
+            const fragment = document.createDocumentFragment();
+            const shuffledCards = Array.from(nounCards).sort(() => Math.random() - 0.5);
+            shuffledCards.forEach(card => fragment.appendChild(card));
+            nounsContainer.innerHTML = '';
+            nounsContainer.appendChild(fragment);
+        });
+
+        // Reset button
+        resetBtn.addEventListener('click', () => {
+            // Get all placed nouns
+            const placedNouns = document.querySelectorAll('.category-container .noun-card');
+            
+            // Create new draggable elements for each placed noun
+            placedNouns.forEach(card => {
+                const word = card.getAttribute('data-word');
+                const category = card.getAttribute('data-category');
+                const example = card.getAttribute('data-example');
+                
+                const newCard = document.createElement('div');
+                newCard.className = 'noun-card draggable bg-white p-3 rounded-lg shadow-md text-center font-medium text-gray-800 w-24 h-24 flex flex-col items-center justify-center';
+                newCard.setAttribute('draggable', 'true');
+                newCard.setAttribute('data-category', category);
+                newCard.setAttribute('data-word', word);
+                newCard.setAttribute('data-example', example);
+                
+                const wordSpan = document.createElement('span');
+                wordSpan.textContent = word;
+                wordSpan.className = 'font-bold';
+                
+                newCard.appendChild(wordSpan);
+                nounsContainer.appendChild(newCard);
+            });
+            
+            // Clear all drop zones
+            dropZones.forEach(zone => {
+                zone.innerHTML = '';
+            });
+            
+            // Reset counters
+            correctPlacements = 0;
+            
+            // Re-setup drag and drop
+            setupDragAndDrop();
+        });
+        
+        // Difficulty buttons
+        function setDifficulty(difficulty) {
+            currentDifficulty = difficulty;
+            currentSet = 0;
+            score = 0;
+            
+            // Update button styles
+            [basicBtn, intermediateBtn, advancedBtn].forEach(btn => {
+                btn.classList.remove('active', 'scale-110');
+            });
+            
+            if (difficulty === "basic") {
+                basicBtn.classList.add('active', 'scale-110');
+            } else if (difficulty === "intermediate") {
+                intermediateBtn.classList.add('active', 'scale-110');
+            } else {
+                advancedBtn.classList.add('active', 'scale-110');
+            }
+            
+            // Clear drop zones
+            dropZones.forEach(zone => {
+                zone.innerHTML = '';
+            });
+            
+            // Load new nouns
+            loadNouns(nounSets[currentDifficulty][currentSet]);
+            setupDragAndDrop();
+            updateScore();
+        }
+        
+        basicBtn.addEventListener('click', () => setDifficulty("basic"));
+        intermediateBtn.addEventListener('click', () => setDifficulty("intermediate"));
+        advancedBtn.addEventListener('click', () => setDifficulty("advanced"));
+
+        // Initialize the game
+        initGame();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'959dfcfac02e0760',t:'MTc1MTYyNTQ1Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
